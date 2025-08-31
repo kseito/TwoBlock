@@ -1,14 +1,16 @@
 package jp.kztproject.twoblock
 
 import net.fabricmc.api.ModInitializer
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerBlockEntityEvents
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents
+import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents
 import net.fabricmc.fabric.api.event.player.UseItemCallback
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents
 import net.minecraft.block.Blocks
 import net.minecraft.item.Items
-import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.sound.SoundCategory
 import net.minecraft.sound.SoundEvents
+import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.util.ActionResult
 import net.minecraft.util.math.BlockPos
 import org.slf4j.LoggerFactory
@@ -17,6 +19,7 @@ object TwoBlockMod : ModInitializer {
     const val MOD_ID = "two-block-mod"
     private val logger = LoggerFactory.getLogger(MOD_ID)
     
+    // ワンブロックアイテムから生成される可能性のあるブロック（棒使用時）
     private val availableBlocks = listOf(
         Blocks.STONE,
         Blocks.COBBLESTONE,
@@ -38,6 +41,8 @@ object TwoBlockMod : ModInitializer {
 	override fun onInitialize() {
 		logger.info("Loading Two Block Mod...")
 		
+		// 無限掘りブロック（Bedrock）は既存のブロックを使用するため登録不要
+		
 		// プレイヤーがワールドに参加した時の処理
 		ServerPlayConnectionEvents.JOIN.register { handler, _, _ ->
 			val player = handler.player
@@ -49,6 +54,16 @@ object TwoBlockMod : ModInitializer {
 			setupWorldEnvironment(server)
 		}
 		
+		// ブロック破壊イベント - 無限掘り機能
+		PlayerBlockBreakEvents.AFTER.register { world, _, pos, state, _ ->
+			logger.info("Block broken at $pos: ${state.block}")
+			// 無限掘りブロックが破壊された場合
+			if (state.block == InfiniteDigBlock.BLOCK) {
+				logger.info("Infinite dig block detected at $pos, calling onBlockBroken")
+				InfiniteDigBlock.onBlockBroken(world, pos)
+			}
+		}
+
 		// ワンブロックアイテムの使用処理
 		UseItemCallback.EVENT.register { player, world, hand ->
 			val stack = player.getStackInHand(hand)
@@ -87,6 +102,10 @@ object TwoBlockMod : ModInitializer {
 		
 		// VoidChunkGeneratorで空の世界が生成されるので、スポーン位置に1ブロックだけ設置
 		world.setBlockState(spawnPos, Blocks.GRASS_BLOCK.defaultState)
+		
+		// 無限掘りブロックを近くに配置（x=2, y=64, z=0の位置）
+		val infiniteDigPos = BlockPos(2, 64, 0)
+		InfiniteDigBlock.placeAt(world, infiniteDigPos)
 		
 		// プレイヤーをブロックの上にテレポート
 		player.teleport(0.5, 65.0, 0.5, false)
