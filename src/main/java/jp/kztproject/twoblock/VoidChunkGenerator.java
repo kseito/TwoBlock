@@ -35,6 +35,7 @@ import net.minecraft.world.biome.BiomeKeys;
 import net.minecraft.world.biome.source.BiomeAccess;
 import net.minecraft.world.biome.source.FixedBiomeSource;
 import net.minecraft.world.chunk.Chunk;
+import net.minecraft.world.StructureWorldAccess;
 import net.minecraft.world.gen.StructureAccessor;
 import net.minecraft.world.gen.chunk.Blender;
 import net.minecraft.world.gen.chunk.ChunkGenerator;
@@ -69,7 +70,7 @@ public class VoidChunkGenerator extends ChunkGenerator {
 
 	@Override
 	public int getWorldHeight() {
-		return 0;
+		return 384; // 標準的なMinecraft世界の高さ
 	}
 
 	@Override
@@ -79,25 +80,30 @@ public class VoidChunkGenerator extends ChunkGenerator {
 
 	@Override
 	public int getSeaLevel() {
-		return 0;
+		return 63; // 標準的な海面レベル
 	}
 
 	@Override
 	public int getMinimumY() {
-		return 0;
+		return -64; // 標準的なMinecraft世界の最小Y座標
 	}
 
 	@Override
 	public int getHeight(int x, int z, Heightmap.Type heightmapType, HeightLimitView heightLimitView, NoiseConfig noiseConfig) {
-		return 0;
+		return getMinimumY(); // 空の世界なので最小Y座標を返す
 	}
 
 	@Override
 	public VerticalBlockSample getColumnSample(int x, int z, HeightLimitView heightLimitView, NoiseConfig noiseConfig) {
-		return new VerticalBlockSample(0, new BlockState[0]);
+		return new VerticalBlockSample(getMinimumY(), new BlockState[0]);
 	}
 
 	@Override
 	public void appendDebugHudText(List<String> list, NoiseConfig noiseConfig, BlockPos blockPos) {
+	}
+
+	@Override
+	public void generateFeatures(StructureWorldAccess world, Chunk chunk, StructureAccessor structureAccessor) {
+		// 構造物生成を完全に無効化
 	}
 }
