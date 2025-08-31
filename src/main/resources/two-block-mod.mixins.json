@@ -3,7 +3,8 @@
 	"package": "jp.kztproject.twoblock.mixin",
 	"compatibilityLevel": "JAVA_21",
 	"mixins": [
-		"ExampleMixin"
+		"ExampleMixin",
+		"OverworldChunkGeneratorMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

@@ -2,7 +2,6 @@ package jp.kztproject.twoblock
 
 import net.fabricmc.api.ModInitializer
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents
-import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents
 import net.fabricmc.fabric.api.event.player.UseItemCallback
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents
 import net.minecraft.block.Blocks
@@ -40,7 +39,7 @@ object TwoBlockMod : ModInitializer {
 		logger.info("Loading Two Block Mod...")
 		
 		// プレイヤーがワールドに参加した時の処理
-		ServerPlayConnectionEvents.JOIN.register { handler, sender, server ->
+		ServerPlayConnectionEvents.JOIN.register { handler, _, _ ->
 			val player = handler.player
 			setupOneBlockWorld(player)
 		}
@@ -86,22 +85,10 @@ object TwoBlockMod : ModInitializer {
 		val world = player.world
 		val spawnPos = BlockPos(0, 64, 0)
 		
-		// スポーン周辺をクリア（半径10ブロック）
-		for (x in -10..10) {
-			for (z in -10..10) {
-				for (y in 50..80) {
-					val pos = BlockPos(x, y, z)
-					if (pos != spawnPos) {
-						world.setBlockState(pos, Blocks.AIR.defaultState)
-					}
-				}
-			}
-		}
-		
-		// スポーン位置にグラスブロックを設置
+		// VoidChunkGeneratorで空の世界が生成されるので、スポーン位置に1ブロックだけ設置
 		world.setBlockState(spawnPos, Blocks.GRASS_BLOCK.defaultState)
 		
-		// プレイヤーを安全な位置にテレポート
+		// プレイヤーをブロックの上にテレポート
 		player.teleport(0.5, 65.0, 0.5, false)
 		
 		// ワンブロックアイテム（棒）を与える
